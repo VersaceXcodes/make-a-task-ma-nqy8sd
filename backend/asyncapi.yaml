@@ -1,0 +1,224 @@
+asyncapi: 2.0.0
+info:
+  title: Make-a-Task-Ma Real-time Events API
+  version: 1.0.0
+  description: >
+    AsyncAPI specification defining all real-time WebSocket events for
+    Make-a-Task-Ma. Covers events for task status updates, comments,
+    attachments, drag-and-drop reordering, and activity stream updates for
+    collaborative task management.
+servers:
+  production:
+    url: ws://localhost:3000
+    protocol: ws
+channels:
+  task/status/updated:
+    description: Broadcast when a task's status is changed.
+    publish:
+      summary: Notify clients of task status change
+      operationId: publishTaskStatusUpdated
+      message:
+        $ref: "#/components/messages/taskStatusUpdated"
+    subscribe:
+      summary: Receive task status updates
+      operationId: subscribeTaskStatusUpdated
+      message:
+        $ref: "#/components/messages/taskStatusUpdated"
+  task/comment/new:
+    description: Broadcast when a new comment is added to a task.
+    publish:
+      summary: Send new comment to clients viewing the task
+      operationId: publishNewComment
+      message:
+        $ref: "#/components/messages/newComment"
+    subscribe:
+      summary: Receive new comments on tasks
+      operationId: subscribeNewComment
+      message:
+        $ref: "#/components/messages/newComment"
+  task/attachment/uploaded:
+    description: Broadcast when a new attachment is uploaded to a task.
+    publish:
+      summary: Notify clients of new attachment on a task
+      operationId: publishAttachmentUploaded
+      message:
+        $ref: "#/components/messages/attachmentUploaded"
+    subscribe:
+      summary: Receive notifications of new attachments
+      operationId: subscribeAttachmentUploaded
+      message:
+        $ref: "#/components/messages/attachmentUploaded"
+  task/reorder:
+    description: Notify clients when a task is moved or reordered via drag-and-drop.
+    publish:
+      summary: Broadcast task reorder events
+      operationId: publishTaskReordered
+      message:
+        $ref: "#/components/messages/taskReordered"
+    subscribe:
+      summary: Receive task reorder updates
+      operationId: subscribeTaskReordered
+      message:
+        $ref: "#/components/messages/taskReordered"
+  activity/stream:
+    description: General activity stream updates for all significant actions.
+    publish:
+      summary: Notify clients of activity stream events
+      operationId: publishActivityStream
+      message:
+        $ref: "#/components/messages/activityStreamUpdate"
+    subscribe:
+      summary: Subscribe to activity stream updates
+      operationId: subscribeActivityStream
+      message:
+        $ref: "#/components/messages/activityStreamUpdate"
+components:
+  messages:
+    taskStatusUpdated:
+      name: taskStatusUpdated
+      payload:
+        type: object
+        required:
+          - task_id
+          - new_status
+          - timestamp
+        properties:
+          task_id:
+            type: string
+            description: ID of the task whose status was updated
+          new_status:
+            type: string
+            enum:
+              - Pending
+              - In Progress
+              - Completed
+              - On Hold
+              - Cancelled
+            description: The new status of the task
+          timestamp:
+            type: string
+            format: date-time
+            description: Time when the status change occurred
+    newComment:
+      name: newComment
+      payload:
+        type: object
+        required:
+          - comment_id
+          - task_id
+          - user_id
+          - content
+          - timestamp
+        properties:
+          comment_id:
+            type: string
+            description: Unique identifier of the comment
+          task_id:
+            type: string
+            description: ID of the task this comment belongs to
+          user_id:
+            type: string
+            description: ID of the user who posted the comment
+          content:
+            type: string
+            description: Text content of the comment
+          timestamp:
+            type: string
+            format: date-time
+            description: When the comment was created
+    attachmentUploaded:
+      name: attachmentUploaded
+      payload:
+        type: object
+        required:
+          - attachment_id
+          - task_id
+          - file_url
+          - file_name
+          - uploaded_by_user_id
+          - uploaded_at
+        properties:
+          attachment_id:
+            type: string
+            description: Unique ID of the attachment
+          task_id:
+            type: string
+            description: ID of the task to which the attachment was added
+          file_url:
+            type: string
+            description: URL to access the uploaded file
+          file_name:
+            type: string
+            description: Name of the uploaded file
+          uploaded_by_user_id:
+            type: string
+            description: ID of the user who uploaded the file
+          uploaded_at:
+            type: string
+            format: date-time
+            description: Upload timestamp
+    taskReordered:
+      name: taskReordered
+      payload:
+        type: object
+        required:
+          - workspace_id
+          - task_id
+          - new_position
+          - previous_position
+          - status_column
+          - timestamp
+        properties:
+          workspace_id:
+            type: string
+            description: ID of the workspace where reordering occurred
+          task_id:
+            type: string
+            description: ID of the task moved
+          new_position:
+            type: integer
+            description: The new position index within the list
+          previous_position:
+            type: integer
+            description: The previous index before move
+          status_column:
+            type: string
+            enum:
+              - Pending
+              - In Progress
+              - Completed
+              - On Hold
+              - Cancelled
+            description: The column/status where the task is placed
+          timestamp:
+            type: string
+            format: date-time
+            description: When the reordering occurred
+    activityStreamUpdate:
+      name: activityStreamUpdate
+      payload:
+        type: object
+        required:
+          - activity_id
+          - user_id
+          - action_type
+          - description
+          - timestamp
+        properties:
+          activity_id:
+            type: string
+            description: Unique identifier for the activity
+          user_id:
+            type: string
+            description: ID of the user performing the action
+          action_type:
+            type: string
+            description: Type of activity, e.g., 'task_created', 'status_changed',
+              'comment_added'
+          description:
+            type: string
+            description: Additional details about the activity
+          timestamp:
+            type: string
+            format: date-time
+            description: Time when activity occurred
